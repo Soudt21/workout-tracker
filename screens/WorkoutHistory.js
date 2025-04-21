@@ -1,10 +1,13 @@
 // screens/WorkoutHistory.js
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, StyleSheet, Button } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Picker } from '@react-native-picker/picker';
+import { format } from 'date-fns';
 
 export default function WorkoutHistory() {
   const [workouts, setWorkouts] = useState([]);
+  const [selectedMuscle, setSelectedMuscle] = useState('All');
 
   useEffect(() => {
     loadWorkouts();
@@ -20,34 +23,58 @@ export default function WorkoutHistory() {
     }
   };
 
-  const renderItem = ({ item }) => (
-    <View style={styles.item}>
-      <Text style={styles.date}>{item.date}</Text>
-      <Text style={styles.muscle}>{item.muscle}</Text>
-      <Text style={styles.type}>{item.type}</Text>
-      <Text style={styles.weight}>
-  {item.weight} {item.unit || 'lbs'}
-</Text>
+  const clearWorkouts = async () => {
+    await AsyncStorage.removeItem('@workouts');
+    loadWorkouts();
+  };
 
+  const filteredWorkouts =
+    selectedMuscle === 'All'
+      ? workouts
+      : workouts.filter(item => item.muscle === selectedMuscle);
+
+  const renderItem = ({ item }) => (
+    <View style={styles.itemBox}>
+      <Text style={styles.date}>{format(new Date(item.date), 'MM-dd-yyyy')}</Text>
+      <View style={styles.rowBetween}>
+        <Text style={styles.muscle}>{item.muscle}</Text>
+        <Text style={styles.weight}>{item.weight} {item.unit || 'lbs'}</Text>
+      </View>
+      <Text style={styles.type}>{item.type}</Text>
     </View>
   );
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Workout History</Text>
+
+      <View style={styles.filterRow}>
+        <Picker
+          selectedValue={selectedMuscle}
+          onValueChange={(value) => setSelectedMuscle(value)}
+          style={styles.picker}
+        >
+          <Picker.Item label="All" value="All" />
+          <Picker.Item label="Chest" value="Chest" />
+          <Picker.Item label="Back" value="Back" />
+          <Picker.Item label="Legs" value="Legs" />
+          <Picker.Item label="Arms" value="Arms" />
+          <Picker.Item label="Shoulders" value="Shoulders" />
+          <Picker.Item label="Core" value="Core" />
+        </Picker>
+      </View>
+
       <FlatList
-        data={workouts}
+        data={filteredWorkouts}
         keyExtractor={(_, i) => i.toString()}
         renderItem={renderItem}
         ListEmptyComponent={<Text style={styles.empty}>No workouts logged yet.</Text>}
+        contentContainerStyle={{ paddingBottom: 80 }}
       />
-     <Button
-  title="Clear Workouts (Reset)"
-  onPress={async () => {
-    await AsyncStorage.removeItem('@workouts');
-    loadWorkouts(); // refresh view after clearing
-  }}
-/>
+
+      <TouchableOpacity style={styles.clearButton} onPress={clearWorkouts}>
+        <Text style={styles.clearButtonText}>Clear Workouts</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -65,7 +92,17 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     textAlign: 'center',
   },
-  item: {
+  filterRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  picker: {
+    flex: 1,
+    height: 50,
+    color: '#000',
+  },
+  itemBox: {
     borderBottomColor: '#ccc',
     borderBottomWidth: 1,
     paddingVertical: 12,
@@ -73,6 +110,10 @@ const styles = StyleSheet.create({
   date: {
     fontSize: 14,
     color: '#333',
+  },
+  rowBetween: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
   },
   muscle: {
     fontSize: 16,
@@ -85,11 +126,26 @@ const styles = StyleSheet.create({
   },
   weight: {
     fontSize: 14,
+    fontWeight: 'bold',
     color: '#000',
   },
   empty: {
     textAlign: 'center',
     marginTop: 40,
     color: '#888',
+  },
+  clearButton: {
+    position: 'absolute',
+    bottom: 16,
+    left: 20,
+    right: 20,
+    backgroundColor: '#000',
+    paddingVertical: 12,
+    borderRadius: 6,
+  },
+  clearButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
 });
