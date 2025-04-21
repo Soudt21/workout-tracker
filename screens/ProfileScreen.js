@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Button, ScrollView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { logoutUser } from '../services/authService';
 
 export default function ProfileScreen({ navigation }) {
   const [user, setUser] = useState(null);
@@ -8,7 +9,7 @@ export default function ProfileScreen({ navigation }) {
 
   useEffect(() => {
     (async () => {
-      const currentUser = await AsyncStorage.getItem('@currentUser');
+      const currentUser = await AsyncStorage.getItem('@current_user');
       if (currentUser) {
         setUser(JSON.parse(currentUser));
       }
@@ -17,7 +18,7 @@ export default function ProfileScreen({ navigation }) {
   }, []);
 
   const handleLogout = async () => {
-    await AsyncStorage.removeItem('@user_logged_in');
+    await logoutUser();
     navigation.reset({
       index: 0,
       routes: [{ name: 'Login' }],
@@ -33,7 +34,7 @@ export default function ProfileScreen({ navigation }) {
           <Text style={styles.label}>Loading profile...</Text>
         ) : user ? (
           <>
-            <Text style={styles.label}>Name: {user.username}</Text>
+            <Text style={styles.label}>Name: {user.firstName} {user.lastName}</Text>
             <Text style={styles.label}>Email: {user.email || 'N/A'}</Text>
             <Text style={styles.label}>Age: {user.age || 'N/A'}</Text>
             <Text style={styles.label}>Height: {user.height || 'N/A'}</Text>

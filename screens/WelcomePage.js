@@ -1,59 +1,75 @@
 // screens/WelcomePage.js
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, Button, ScrollView } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function WelcomePage({ navigation }) {
+  const [name, setName] = useState('');
+
+  useEffect(() => {
+    const loadUser = async () => {
+      const storedUser = await AsyncStorage.getItem('@current_user');
+      if (storedUser) {
+        const user = JSON.parse(storedUser);
+        setName(`${user.firstName}`);
+      }
+    };
+    loadUser();
+  }, []);
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Welcome to Your Workout Tracker</Text>
+    <ScrollView contentContainerStyle={styles.container}>
+      <Text style={styles.title}>Welcome back{name ? `, ${name}` : ''}!</Text>
 
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => navigation.navigate('Add Workout')}
-      >
-        <Text style={styles.buttonText}>Add Workout</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => navigation.navigate('Progress Tracker')}
-      >
-        <Text style={styles.buttonText}>View Progress</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => navigation.navigate('Workout History')}
-      >
-        <Text style={styles.buttonText}>Workout History</Text>
-      </TouchableOpacity>
-    </View>
+      <View style={styles.buttonGroup}>
+        <View style={styles.button}>
+          <Button
+            title="Add Workout"
+            onPress={() => navigation.navigate('Add Workout')}
+            color="#000"
+          />
+        </View>
+        <View style={styles.button}>
+          <Button
+            title="View Progress"
+            onPress={() => navigation.navigate('Progress Tracker')}
+            color="#000"
+          />
+        </View>
+        <View style={styles.button}>
+          <Button
+            title="Workout History"
+            onPress={() => navigation.navigate('Workout History')}
+            color="#000"
+          />
+        </View>
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: '#fff',
     padding: 24,
+    flexGrow: 1,
     justifyContent: 'center',
+    backgroundColor: '#fff',
   },
   title: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: 'bold',
+    textAlign: 'center',
     color: '#000',
     marginBottom: 32,
-    textAlign: 'center',
+  },
+  buttonGroup: {
+    gap: 20,
   },
   button: {
-    backgroundColor: '#000',
-    paddingVertical: 16,
-    borderRadius: 12,
-    marginBottom: 20,
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    textAlign: 'center',
+    backgroundColor: '#fff',
+    borderColor: '#000',
+    borderWidth: 1,
+    borderRadius: 8,
+    overflow: 'hidden',
   },
 });
