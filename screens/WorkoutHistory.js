@@ -33,16 +33,27 @@ export default function WorkoutHistory() {
       ? workouts
       : workouts.filter(item => item.muscle === selectedMuscle);
 
-  const renderItem = ({ item }) => (
-    <View style={styles.itemBox}>
-      <Text style={styles.date}>{format(new Date(item.date), 'MM-dd-yyyy')}</Text>
-      <View style={styles.rowBetween}>
-        <Text style={styles.muscle}>{item.muscle}</Text>
-        <Text style={styles.weight}>{item.weight} {item.unit || 'lbs'}</Text>
-      </View>
-      <Text style={styles.type}>{item.type}</Text>
-    </View>
-  );
+      const renderItem = ({ item }) => (
+        <View style={styles.itemBox}>
+          <Text style={styles.date}>
+            {new Date(item.date).toLocaleDateString('en-US')}
+          </Text>
+          <View style={styles.rowBetween}>
+            <Text style={styles.muscle}>{item.muscle}</Text>
+            <Text style={styles.weight}>
+              {item.weight} {item.unit || 'lbs'}
+            </Text>
+          </View>
+          <Text style={styles.type}>{item.type}</Text>
+      
+          {item.sets && item.reps && (
+            <Text style={styles.subInfo}>
+              {item.sets} sets × {item.reps} reps
+            </Text>
+          )}
+        </View>
+      );
+      
 
   return (
     <View style={styles.container}>
@@ -148,4 +159,10 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
   },
+  subInfo: {
+    fontSize: 13,
+    color: '#333',
+    marginTop: 2,
+  },
+  
 });

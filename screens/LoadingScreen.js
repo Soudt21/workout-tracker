@@ -9,7 +9,6 @@ export default function LoadingScreen({ navigation }) {
       navigation.replace(isLoggedIn ? 'Welcome' : 'Login');
     };
     checkLogin();
-    console.log('Checking login state...');
 
   }, []);
 

@@ -25,12 +25,15 @@ const formatToISODate = (naDate) => {
   return `${year}-${month}-${day}`;
 };
 
+
 export default function AddWorkout() {
   const [muscle, setMuscle] = useState('');
   const [type, setType] = useState('');
   const [weight, setWeight] = useState('');
   const [unit, setUnit] = useState('lbs');
   const [date, setDate] = useState(formatToNorthAmericanDate(new Date().toISOString().slice(0, 10)));
+  const [sets, setSets] = useState('');
+  const [reps, setReps] = useState('');
 
   const saveWorkout = async () => {
     if (!muscle || !type || !weight || !date) {
@@ -49,8 +52,10 @@ export default function AddWorkout() {
       type,
       weight: parsedWeight,
       unit,
-      date: formatToISODate(date),
-    };
+      sets,
+      reps,
+      date,
+    };    
 
     try {
       const storedData = await AsyncStorage.getItem('@workouts');
@@ -58,12 +63,15 @@ export default function AddWorkout() {
       workouts.push(newWorkout);
       await AsyncStorage.setItem('@workouts', JSON.stringify(workouts));
 
-      Alert.alert('Workout saved!');
+      Alert.alert('Workout added!');
       setMuscle('');
       setType('');
       setWeight('');
       setUnit('lbs');
       setDate(formatToNorthAmericanDate(new Date().toISOString().slice(0, 10)));
+      setSets('');
+      setReps('');
+
     } catch (e) {
       Alert.alert('Error saving workout', e.message);
     }
@@ -94,6 +102,25 @@ export default function AddWorkout() {
           onChangeText={setType}
           style={styles.input}
         />
+
+<Text style={styles.label}>Sets</Text>
+<TextInput
+  placeholder="e.g., 3"
+  keyboardType="numeric"
+  value={sets}
+  onChangeText={setSets}
+  style={styles.input}
+/>
+
+<Text style={styles.label}>Reps</Text>
+<TextInput
+  placeholder="e.g., 8"
+  keyboardType="numeric"
+  value={reps}
+  onChangeText={setReps}
+  style={styles.input}
+/>
+
 
         <Text style={styles.label}>Total Weight</Text>
         <View style={styles.weightRow}>
@@ -135,7 +162,7 @@ export default function AddWorkout() {
         />
 
         <View style={{ marginTop: 20 }}>
-          <Button title="Save Workout" onPress={saveWorkout} color="#000" />
+          <Button title="Add Workout" onPress={saveWorkout} color="#000" />
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
