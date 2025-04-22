@@ -12,26 +12,15 @@ import {
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
-// Convert YYYY-MM-DD → DD-MM-YYYY
-const formatToNorthAmericanDate = (isoDate) => {
-  const [year, month, day] = isoDate.split('-');
-  return `${month}-${day}-${year}`;
-};
-
-// Convert DD-MM-YYYY → YYYY-MM-DD for storage
-const formatToISODate = (naDate) => {
-  const [day, month, year] = naDate.split('-');
-  return `${year}-${month}-${day}`;
-};
-
+import { format } from 'date-fns';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function AddWorkout() {
   const [muscle, setMuscle] = useState('');
   const [type, setType] = useState('');
   const [weight, setWeight] = useState('');
   const [unit, setUnit] = useState('lbs');
-  const [date, setDate] = useState(formatToNorthAmericanDate(new Date().toISOString().slice(0, 10)));
+  const [date, setDate] = useState(format(new Date(), 'MM-dd-yyyy'));
   const [sets, setSets] = useState('');
   const [reps, setReps] = useState('');
 
@@ -55,7 +44,7 @@ export default function AddWorkout() {
       sets,
       reps,
       date,
-    };    
+    };
 
     try {
       const storedData = await AsyncStorage.getItem('@workouts');
@@ -68,7 +57,7 @@ export default function AddWorkout() {
       setType('');
       setWeight('');
       setUnit('lbs');
-      setDate(formatToNorthAmericanDate(new Date().toISOString().slice(0, 10)));
+      setDate(format(new Date(), 'MM-dd-yyyy'));
       setSets('');
       setReps('');
 
@@ -78,6 +67,7 @@ export default function AddWorkout() {
   };
 
   return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
     <KeyboardAvoidingView
       style={{ flex: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -103,24 +93,23 @@ export default function AddWorkout() {
           style={styles.input}
         />
 
-<Text style={styles.label}>Sets</Text>
-<TextInput
-  placeholder="e.g., 3"
-  keyboardType="numeric"
-  value={sets}
-  onChangeText={setSets}
-  style={styles.input}
-/>
+        <Text style={styles.label}>Sets</Text>
+        <TextInput
+          placeholder="e.g., 3"
+          keyboardType="numeric"
+          value={sets}
+          onChangeText={setSets}
+          style={styles.input}
+        />
 
-<Text style={styles.label}>Reps</Text>
-<TextInput
-  placeholder="e.g., 8"
-  keyboardType="numeric"
-  value={reps}
-  onChangeText={setReps}
-  style={styles.input}
-/>
-
+        <Text style={styles.label}>Reps</Text>
+        <TextInput
+          placeholder="e.g., 8"
+          keyboardType="numeric"
+          value={reps}
+          onChangeText={setReps}
+          style={styles.input}
+        />
 
         <Text style={styles.label}>Total Weight</Text>
         <View style={styles.weightRow}>
@@ -166,6 +155,7 @@ export default function AddWorkout() {
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 

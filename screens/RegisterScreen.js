@@ -53,7 +53,7 @@ export default function RegisterScreen({ navigation }) {
     if (!result.success) {
       Alert.alert('Registration Error', result.message);
     } else {
-      navigation.reset({ index: 0, routes: [{ name: 'Welcome' }] });
+      navigation.reset({ index: 0, routes: [{ name: 'MainTabs' }] });
     }
   };  
 

@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Button } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ProgressBar } from 'react-native-paper';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function ProgressTracker({ navigation }) {
   const [progressData, setProgressData] = useState([]);
@@ -54,6 +55,7 @@ export default function ProgressTracker({ navigation }) {
   };
 
   return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Progress Toward Your Goals</Text>
 
@@ -78,6 +80,7 @@ export default function ProgressTracker({ navigation }) {
   />
 </View>
     </ScrollView>
+        </SafeAreaView>
   );
 }
 

@@ -1,6 +1,15 @@
 // screens/LoginScreen.js
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  Button,
+  StyleSheet,
+  Alert,
+  KeyboardAvoidingView,
+  Platform
+} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { loginUser } from '../services/authService';
 
@@ -13,9 +22,13 @@ export default function LoginScreen({ navigation }) {
     if (!result.success) {
       Alert.alert('Login Failed', result.message);
     } else {
-      navigation.reset({ index: 0, routes: [{ name: 'Welcome' }] });
+      // ✅ Save login status
+      await AsyncStorage.setItem('@user_logged_in', 'true');
+      await AsyncStorage.setItem('@current_user', JSON.stringify(result.user));
+      // No need to navigate — App.js handles rendering MainTabs
     }
   };
+  
 
   return (
     <KeyboardAvoidingView
@@ -69,6 +82,7 @@ const styles = StyleSheet.create({
     padding: 12,
     marginBottom: 16,
     borderRadius: 6,
+    color: '#000',
   },
   link: {
     marginTop: 16,
