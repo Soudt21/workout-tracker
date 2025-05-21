@@ -20,7 +20,8 @@ export default function AddWorkout() {
   const [type, setType] = useState('');
   const [weight, setWeight] = useState('');
   const [unit, setUnit] = useState('lbs');
-  const [date, setDate] = useState(format(new Date(), 'MM-dd-yyyy'));
+  // store ISO format
+  const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [sets, setSets] = useState('');
   const [reps, setReps] = useState('');
 
@@ -29,7 +30,6 @@ export default function AddWorkout() {
       Alert.alert('Missing Fields', 'Please fill all fields');
       return;
     }
-
     const parsedWeight = parseFloat(weight);
     if (isNaN(parsedWeight) || !isFinite(parsedWeight)) {
       Alert.alert('Invalid weight', 'Please enter a valid number.');
@@ -43,7 +43,7 @@ export default function AddWorkout() {
       unit,
       sets,
       reps,
-      date,
+      date,  // ISO stored
     };
 
     try {
@@ -51,125 +51,126 @@ export default function AddWorkout() {
       const workouts = storedData ? JSON.parse(storedData) : [];
       workouts.push(newWorkout);
       await AsyncStorage.setItem('@workouts', JSON.stringify(workouts));
-
       Alert.alert('Workout added!');
+      // reset form
       setMuscle('');
       setType('');
       setWeight('');
       setUnit('lbs');
-      setDate(format(new Date(), 'MM-dd-yyyy'));
+      setDate(format(new Date(), 'yyyy-MM-dd'));
       setSets('');
       setReps('');
-
     } catch (e) {
       Alert.alert('Error saving workout', e.message);
     }
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={100}
-    >
-      <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
-        <Text style={styles.label}>Muscle Category</Text>
-        <Picker selectedValue={muscle} onValueChange={setMuscle} style={styles.input}>
-          <Picker.Item label="Select a muscle group" value="" />
-          <Picker.Item label="Chest" value="Chest" />
-          <Picker.Item label="Back" value="Back" />
-          <Picker.Item label="Legs" value="Legs" />
-          <Picker.Item label="Arms" value="Arms" />
-          <Picker.Item label="Shoulders" value="Shoulders" />
-          <Picker.Item label="Core" value="Core" />
-        </Picker>
+    <SafeAreaView style={{ flex:1, backgroundColor:'#fff' }}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={100}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollContainer}
+          keyboardShouldPersistTaps="handled"
+        >
+          <Text style={styles.label}>Muscle Category</Text>
+          <Picker
+            selectedValue={muscle}
+            onValueChange={setMuscle}
+            style={styles.input}
+          >
+            <Picker.Item label="Select a muscle group" value="" />
+            <Picker.Item label="Chest" value="Chest" />
+            <Picker.Item label="Back" value="Back" />
+            <Picker.Item label="Legs" value="Legs" />
+            <Picker.Item label="Arms" value="Arms" />
+            <Picker.Item label="Shoulders" value="Shoulders" />
+            <Picker.Item label="Core" value="Core" />
+          </Picker>
 
-        <Text style={styles.label}>Workout Type</Text>
-        <TextInput
-          placeholder="e.g., Bench Press"
-          value={type}
-          onChangeText={setType}
-          style={styles.input}
-        />
-
-        <Text style={styles.label}>Sets</Text>
-        <TextInput
-          placeholder="e.g., 3"
-          keyboardType="numeric"
-          value={sets}
-          onChangeText={setSets}
-          style={styles.input}
-        />
-
-        <Text style={styles.label}>Reps</Text>
-        <TextInput
-          placeholder="e.g., 8"
-          keyboardType="numeric"
-          value={reps}
-          onChangeText={setReps}
-          style={styles.input}
-        />
-
-        <Text style={styles.label}>Total Weight</Text>
-        <View style={styles.weightRow}>
+          <Text style={styles.label}>Workout Type</Text>
           <TextInput
-            placeholder="e.g., 185"
-            keyboardType="numeric"
-            value={weight}
-            onChangeText={(text) => {
-              const cleaned = text.replace(/[^0-9.]/g, '');
-              const parts = cleaned.split('.');
-              const safeText = parts.length > 2 ? parts[0] + '.' + parts.slice(1).join('') : cleaned;
-              setWeight(safeText);
-            }}
-            style={[styles.input, { flex: 1, marginRight: 8 }]}
+            placeholder="e.g., Bench Press"
+            value={type}
+            onChangeText={setType}
+            style={styles.input}
           />
 
-          <View style={styles.unitToggle}>
-            <Text
-              style={[styles.unitOption, unit === 'lbs' && styles.unitSelected]}
-              onPress={() => setUnit('lbs')}
-            >
-              lbs
-            </Text>
-            <Text
-              style={[styles.unitOption, unit === 'kg' && styles.unitSelected]}
-              onPress={() => setUnit('kg')}
-            >
-              kg
-            </Text>
+          <Text style={styles.label}>Sets</Text>
+          <TextInput
+            placeholder="e.g., 3"
+            keyboardType="numeric"
+            value={sets}
+            onChangeText={setSets}
+            style={styles.input}
+          />
+
+          <Text style={styles.label}>Reps</Text>
+          <TextInput
+            placeholder="e.g., 8"
+            keyboardType="numeric"
+            value={reps}
+            onChangeText={setReps}
+            style={styles.input}
+          />
+
+          <Text style={styles.label}>Total Weight</Text>
+          <View style={styles.weightRow}>
+            <TextInput
+              placeholder="e.g., 185"
+              keyboardType="numeric"
+              value={weight}
+              onChangeText={text => {
+                const cleaned = text.replace(/[^0-9.]/g, '');
+                const parts = cleaned.split('.');
+                const safeText =
+                  parts.length > 2
+                    ? parts[0] + '.' + parts.slice(1).join('')
+                    : cleaned;
+                setWeight(safeText);
+              }}
+              style={[styles.input, { flex: 1, marginRight: 8 }]}
+            />
+
+            <View style={styles.unitToggle}>
+              <Text
+                style={[styles.unitOption, unit === 'lbs' && styles.unitSelected]}
+                onPress={() => setUnit('lbs')}
+              >
+                lbs
+              </Text>
+              <Text
+                style={[styles.unitOption, unit === 'kg' && styles.unitSelected]}
+                onPress={() => setUnit('kg')}
+              >
+                kg
+              </Text>
+            </View>
           </View>
-        </View>
 
-        <Text style={styles.label}>Date</Text>
-        <TextInput
-          placeholder="MM-DD-YYYY"
-          value={date}
-          onChangeText={setDate}
-          style={styles.input}
-        />
+          <Text style={styles.label}>Date</Text>
+          <TextInput
+            placeholder="YYYY-MM-DD"
+            value={date}
+            onChangeText={setDate}
+            style={styles.input}
+          />
 
-        <View style={{ marginTop: 20 }}>
-          <Button title="Add Workout" onPress={saveWorkout} color="#000" />
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+          <View style={{ marginTop: 20 }}>
+            <Button title="Add Workout" onPress={saveWorkout} color="#000" />
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  scrollContainer: {
-    padding: 20,
-    flexGrow: 1,
-    backgroundColor: '#fff',
-  },
-  label: {
-    fontWeight: 'bold',
-    marginTop: 16,
-    color: '#000',
-  },
+  scrollContainer: { padding: 20, flexGrow: 1, backgroundColor: '#fff' },
+  label: { fontWeight: 'bold', marginTop: 16, color: '#000' },
   input: {
     borderWidth: 1,
     borderColor: '#000',
@@ -178,10 +179,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     color: '#000',
   },
-  weightRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
+  weightRow: { flexDirection: 'row', alignItems: 'center' },
   unitToggle: {
     flexDirection: 'row',
     borderWidth: 1,
@@ -201,8 +199,5 @@ const styles = StyleSheet.create({
     backgroundColor: '#eee',
     color: '#333',
   },
-  unitSelected: {
-    backgroundColor: '#000',
-    color: '#fff',
-  },
+  unitSelected: { backgroundColor: '#000', color: '#fff' },
 });

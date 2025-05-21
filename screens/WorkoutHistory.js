@@ -11,6 +11,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Picker } from '@react-native-picker/picker';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { format, parseISO, isValid } from 'date-fns';
 
 export default function WorkoutHistory() {
   const [workouts, setWorkouts] = useState([]);
@@ -30,149 +31,122 @@ export default function WorkoutHistory() {
     }
   };
 
-  const clearWorkouts = async () => {
-    Alert.alert('Clear Workout History', 'Are you sure you want to delete all workouts?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Yes',
-        onPress: async () => {
-          await AsyncStorage.removeItem('@workouts');
-          loadWorkouts();
+  const clearWorkouts = () =>
+    Alert.alert(
+      'Clear Workout History',
+      'Are you sure you want to delete all workouts?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Yes',
+          style: 'destructive',
+          onPress: async () => {
+            await AsyncStorage.removeItem('@workouts');
+            loadWorkouts();
+          },
         },
-        style: 'destructive',
-      },
-    ]);
+      ],
+      { cancelable: true }
+    );
+
+  const handleDelete = async indexToDelete => {
+    const updated = workouts.filter((_, i) => i !== indexToDelete);
+    await AsyncStorage.setItem('@workouts', JSON.stringify(updated));
+    setWorkouts(updated);
   };
 
-  const filteredWorkouts =
+  // Filter by muscle if needed
+  const filtered =
     selectedMuscle === 'All'
       ? workouts
-      : workouts.filter((item) => item.muscle === selectedMuscle);
+      : workouts.filter(w => w.muscle === selectedMuscle);
 
-  const renderItem = ({ item }) => (
-    <View style={styles.itemBox}>
-      <Text style={styles.date}>{item.date}</Text>
-      <View style={styles.rowBetween}>
-        <Text style={styles.muscle}>{item.muscle}</Text>
-        <Text style={styles.weight}>
-          {item.weight} {item.unit || 'lbs'}
-        </Text>
-      </View>
-      <Text style={styles.type}>{item.type}</Text>
-      {item.sets && item.reps && (
-        <Text style={styles.subInfo}>
-          {item.sets} sets × {item.reps} reps
-        </Text>
-      )}
+  // Group by date
+  const groupedByDate = filtered.reduce((acc, w, i) => {
+    const dateObj = parseISO(w.date);
+    const displayDate = isValid(dateObj)
+      ? format(dateObj, 'MM-dd-yyyy')
+      : w.date;
+    if (!acc[displayDate]) acc[displayDate] = [];
+    acc[displayDate].push({ ...w, index: i });
+    return acc;
+  }, {});
+
+  // Render each date group
+  const renderDateGroup = ([date, items]) => (
+    <View key={date} style={styles.group}>
+      <Text style={styles.dateHeader}>{date}</Text>
+      {items.map(item => (
+        <View key={item.index} style={styles.entry}>
+          <Text style={styles.muscle}>{item.muscle}</Text>
+          <Text style={styles.type}>{item.type}</Text>
+          {item.sets && item.reps && (
+            <Text style={styles.sub}>{item.sets} sets × {item.reps} reps</Text>
+          )}
+          <Text style={styles.weight}>{item.weight} {item.unit}</Text>
+          <View style={styles.actions}>
+            <TouchableOpacity onPress={() => Alert.alert('Edit feature coming soon')}>
+              <Text style={styles.edit}>Edit</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => handleDelete(item.index)}>
+              <Text style={styles.delete}>Delete</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      ))}
     </View>
   );
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
-      <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <Text style={styles.title}>Workout History</Text>
-
-      <TouchableOpacity style={styles.clearButtonTop} onPress={clearWorkouts}>
-        <Text style={styles.clearButtonText}>Clear Workouts</Text>
+      <TouchableOpacity style={styles.clearBtn} onPress={clearWorkouts}>
+        <Text style={styles.clearText}>Clear Workouts</Text>
       </TouchableOpacity>
 
-      <View style={styles.filterRow}>
-        <Picker
-          selectedValue={selectedMuscle}
-          onValueChange={(value) => setSelectedMuscle(value)}
-          style={styles.picker}
-        >
-          <Picker.Item label="All" value="All" />
-          <Picker.Item label="Chest" value="Chest" />
-          <Picker.Item label="Back" value="Back" />
-          <Picker.Item label="Legs" value="Legs" />
-          <Picker.Item label="Arms" value="Arms" />
-          <Picker.Item label="Shoulders" value="Shoulders" />
-          <Picker.Item label="Core" value="Core" />
-        </Picker>
-      </View>
+      <Picker
+        selectedValue={selectedMuscle}
+        onValueChange={setSelectedMuscle}
+        style={styles.picker}
+      >
+        <Picker.Item label="All" value="All" />
+        <Picker.Item label="Chest" value="Chest" />
+        <Picker.Item label="Back" value="Back" />
+        <Picker.Item label="Legs" value="Legs" />
+        <Picker.Item label="Arms" value="Arms" />
+        <Picker.Item label="Shoulders" value="Shoulders" />
+        <Picker.Item label="Core" value="Core" />
+      </Picker>
 
-      <FlatList
-        data={filteredWorkouts}
-        keyExtractor={(_, i) => i.toString()}
-        renderItem={renderItem}
-        ListEmptyComponent={<Text style={styles.empty}>No workouts logged yet.</Text>}
-        contentContainerStyle={{ paddingBottom: 120 }}
-      />
-    </View>
+      {Object.keys(groupedByDate).length === 0 ? (
+        <Text style={styles.empty}>No workouts logged yet.</Text>
+      ) : (
+        <FlatList
+          data={Object.entries(groupedByDate)}
+          keyExtractor={([date]) => date}
+          renderItem={({ item }) => renderDateGroup(item)}
+          contentContainerStyle={{ paddingBottom: 120 }}
+        />
+      )}
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: '#fff',
-    flex: 1,
-    padding: 20,
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#000',
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  clearButtonTop: {
-    backgroundColor: '#000',
-    paddingVertical: 12,
-    borderRadius: 6,
-    marginBottom: 20,
-  },
-  clearButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  filterRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 20,
-  },
-  picker: {
-    flex: 1,
-    height: 50,
-    color: '#000',
-  },
-  itemBox: {
-    borderBottomColor: '#ccc',
-    borderBottomWidth: 1,
-    paddingVertical: 12,
-  },
-  date: {
-    fontSize: 14,
-    color: '#333',
-  },
-  rowBetween: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  muscle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#000',
-  },
-  type: {
-    fontSize: 14,
-    color: '#555',
-  },
-  weight: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#000',
-  },
-  empty: {
-    textAlign: 'center',
-    marginTop: 40,
-    color: '#888',
-  },
-  subInfo: {
-    fontSize: 13,
-    color: '#333',
-    marginTop: 2,
-  },
+  container: { flex:1, backgroundColor:'#fff', padding:20 },
+  title: { fontSize:22, fontWeight:'bold', textAlign:'center', marginBottom:12 },
+  clearBtn: { backgroundColor:'#000', padding:12, borderRadius:6, marginBottom:20 },
+  clearText: { color:'#fff', textAlign:'center', fontWeight:'bold' },
+  picker: { height:50, marginBottom:20 },
+  empty: { textAlign:'center', marginTop:40, color:'#888' },
+  group: { marginBottom:24 },
+  dateHeader: { fontSize:16, fontWeight:'bold', color:'#000', marginBottom:8 },
+  entry: { borderBottomWidth:1, borderBottomColor:'#ccc', paddingVertical:8 },
+  muscle: { fontSize:14, fontWeight:'600', color:'#000' },
+  type: { fontSize:14, color:'#555', marginTop:4 },
+  sub: { fontSize:13, color:'#333', marginTop:2 },
+  weight: { fontSize:14, fontWeight:'bold', color:'#000', marginTop:4 },
+  actions: { flexDirection:'row', marginTop:8 },
+  edit: { color:'#007bff', marginRight:12 },
+  delete: { color:'red' },
 });
