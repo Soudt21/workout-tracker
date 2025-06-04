@@ -8,7 +8,8 @@ import {
   StyleSheet,
   Alert,
   KeyboardAvoidingView,
-  Platform
+  Platform,
+  TouchableOpacity
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { loginUser } from '../services/authService';
@@ -55,6 +56,13 @@ export default function LoginScreen({ navigation }) {
       />
 
       <Button title="Login" onPress={login} color="#000" />
+
+      <TouchableOpacity
+  style={{ marginTop: 12 }}
+  onPress={() => navigation.navigate('ForgotPassword')}
+>
+  <Text style={styles.link}>Forgot Password?</Text>
+</TouchableOpacity>
 
       <Text style={styles.link} onPress={() => navigation.navigate('Register')}>
         Don’t have an account? Register
